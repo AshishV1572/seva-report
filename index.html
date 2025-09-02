@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Seva Report Form</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    label { display: block; margin-top: 10px; }
+    select, textarea, button { width: 100%; margin-top: 5px; padding: 8px; }
+    .checkbox-group { display: flex; flex-wrap: wrap; }
+    .checkbox-group label { margin-right: 15px; }
+    .modal { display: none; position: fixed; top: 0; left: 0;
+             width: 100%; height: 100%; background: rgba(0,0,0,0.6);
+             justify-content: center; align-items: center; }
+    .modal-content { background: #fff; padding: 20px;
+                     border-radius: 8px; width: 90%; max-width: 600px; }
+    .modal-buttons { display: flex; justify-content: space-between; margin-top: 20px; }
+  </style>
+</head>
+<body>
+  <h2>Seva Report Form</h2>
+
+  <!-- ✅ Single Form -->
+  <form id="reportForm"
+    action="https://script.google.com/macros/s/AKfycbxLB6_gj7EFuNRWkTOsOUhh994XibABzgwbAZuS1JWidHQSe9pC1mJKuBop9nUE5JLUAA/exec"
+    method="POST" onsubmit="submitForm(event)">
+
+    <label>Date:</label>
+    <input type="date" name="date" required>
+
+    <label>Country:</label>
+    <input type="text" name="country" required>
+
+    <label>State:</label>
+    <input type="text" name="state" required>
+
+    <label>District:</label>
+    <input type="text" name="district" required>
+
+    <label>Tehsil:</label>
+    <input type="text" name="tehsil" required>
+
+    <label>Team:</label>
+    <input type="text" name="team" required>
+
+    <label>Member:</label>
+    <input type="text" name="member" required>
+
+    <label>Seva (Regular):</label>
+    <div class="checkbox-group">
+      <label><input type="checkbox" name="sevaRegular" value="Path"> Path</label>
+      <label><input type="checkbox" name="sevaRegular" value="Jaap"> Jaap</label>
+      <label><input type="checkbox" name="sevaRegular" value="Satsang"> Satsang</label>
+    </div>
+
+    <label>Seva (Social):</label>
+    <div class="checkbox-group">
+      <label><input type="checkbox" name="sevaSocial" value="Cleanliness"> Cleanliness</label>
+      <label><input type="checkbox" name="sevaSocial" value="Plantation"> Plantation</label>
+      <label><input type="checkbox" name="sevaSocial" value="Helping"> Helping</label>
+    </div>
+
+    <label>Message:</label>
+    <textarea name="message"></textarea>
+
+    <button type="submit">Submit</button>
+  </form>
+
+  <!-- ✅ Single Preview Modal -->
+  <div id="previewModal" class="modal">
+    <div class="modal-content">
+      <h3>Preview Report</h3>
+      <div id="previewContent"></div>
+      <div class="modal-buttons">
+        <button onclick="closeModal()">Edit</button>
+        <button onclick="confirmSubmit()">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let formPayload = {};
+
+    function submitForm(event) {
+      event.preventDefault();
+      const form = document.getElementById("reportForm");
+
+      // collect form data
+      formPayload = {
+        date: form.date.value,
+        country: form.country.value,
+        state: form.state.value,
+        district: form.district.value,
+        tehsil: form.tehsil.value,
+        team: form.team.value,
+        member: form.member.value,
+        sevaRegular: [...form.querySelectorAll('input[name="sevaRegular"]:checked')].map(cb => cb.value),
+        sevaSocial: [...form.querySelectorAll('input[name="sevaSocial"]:checked')].map(cb => cb.value),
+        message: form.message.value
+      };
+
+      // show preview
+      document.getElementById("previewContent").innerHTML = `
+        <p><b>Date:</b> ${formPayload.date}</p>
+        <p><b>Country:</b> ${formPayload.country}</p>
+        <p><b>State:</b> ${formPayload.state}</p>
+        <p><b>District:</b> ${formPayload.district}</p>
+        <p><b>Tehsil:</b> ${formPayload.tehsil}</p>
+        <p><b>Team:</b> ${formPayload.team}</p>
+        <p><b>Member:</b> ${formPayload.member}</p>
+        <p><b>Seva Regular:</b> ${formPayload.sevaRegular.join(", ")}</p>
+        <p><b>Seva Social:</b> ${formPayload.sevaSocial.join(", ")}</p>
+        <p><b>Message:</b> ${formPayload.message}</p>
+      `;
+      document.getElementById("previewModal").style.display = "flex";
+    }
+
+    function closeModal() {
+      document.getElementById("previewModal").style.display = "none";
+    }
+
+    function confirmSubmit() {
+      const form = document.getElementById("reportForm");
+      closeModal();
+
+      // send using FormData
+      const fd = new FormData();
+      for (const key in formPayload) {
+        if (Array.isArray(formPayload[key])) {
+          fd.append(key, formPayload[key].join(", "));
+        } else {
+          fd.append(key, formPayload[key]);
+        }
+      }
+
+      fetch(form.action, { method: "POST", body: fd })
+        .then(res => res.text())
+        .then(() => {
+          alert("✅ Form submitted successfully!");
+          form.reset();
+        })
+        .catch(err => {
+          console.error(err);
+          alert("❌ Form not sent. Check console.");
+        });
+    }
+  </script>
+</body>
+</html>
